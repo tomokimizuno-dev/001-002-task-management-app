@@ -1,6 +1,8 @@
 # dict型の確認
+import json
 import pandas as pd
 import numpy as np
+from datetime import datetime, date
 task_1 = {'ID': 1, 'task_title': 'ゴミ出しをする',
           'deadline': 2026-11-9, 'status': 'unfinished'}
 task_2 = {'ID': 2, 'task_title': 'トマトを買う',
@@ -48,3 +50,25 @@ update_ID = 2
 task = search_ID(update_ID)
 task_list.remove(task)
 print(task_list)
+
+
+# JSONとファイル入出力の仕様確認
+try:
+    with open('test.json', 'xt', encoding='utf-8') as test_file:
+        json.dump(task_list, test_file)
+except FileExistsError:
+    with open('test.json', 'r', encoding='utf-8') as test_file:
+        print(json.load(test_file))
+
+
+today = '2026-11-10'
+print(type(today))
+today = date.fromisoformat(today)
+print(type(today))
+print(today)
+today = today.isoformat()
+print(type(today))
+today = datetime.fromisoformat(today)
+
+print(today)
+print(type(today))

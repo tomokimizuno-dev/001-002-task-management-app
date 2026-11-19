@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import datetime, date
 import numpy as np
 import pandas as pd
-
-task_list = []
+import json
+import copy
 
 
 def latest_ID(list):
@@ -80,10 +80,47 @@ def delete_task(deleted_task):
                 print("invalid input. Please correct number.")
 
 
-def menu():
+def read_file():
+    print('Checking the relevant file...')
+    try:
+        with open('task_list.json', 'xt', encoding='utf-8') as file:
+            task_list = []
+            return task_list
+            print('No relevant file. Created a new file.')
+    except FileExistsError:
+        with open('task_list.json', 'r', encoding='utf-8') as file:
+            task_list = json.load(file)
+            print('Loading the relevant file...')
+            task_list = str_to_datetime(task_list)
+            print('Converting data type...')
+            return task_list
+
+
+def save_file(task_list):
+    task_list_for_save = copy.deepcopy(task_list)
+    task_list_for_JSON = datetime_to_str(task_list_for_save)
+    with open('task_list.json', 'wt', encoding='utf-8') as file:
+        json.dump(task_list_for_JSON, file)
+
+
+def datetime_to_str(task_list):
+    for task in task_list:
+        task['deadline'] = task['deadline'].isoformat()
+        return task_list
+
+
+def str_to_datetime(task_list):
+    for task in task_list:
+        deadline = str(task['deadline'])
+        deadline = datetime.fromisoformat(deadline)
+        task['deadline'] = deadline.date()
+        return task_list
+
+
+def menu(task_list):
     while True:
         select = int(input(
-            "Please select an action. 1: Add a new task. 2: View a task list. 3: Update status. 4: Delete task. 9: exit  "))
+            "Please select an action. 1: Add a new task. 2: View a task list. 3: Update status. 4: Delete task. 5: Save to JSON. 9: exit  "))
         match select:
             case 1:
                 new_task = reg_new_task(task_list)
@@ -97,6 +134,9 @@ def menu():
             case 4:
                 deleted_task = search_ID(task_list)
                 delete_task(deleted_task)
+            case 5:
+                save_file(task_list)
+                print('saved.')
             case 9:
                 break
             case _:
@@ -104,7 +144,8 @@ def menu():
 
 
 def __main__():
-    menu()
+    task_list = read_file()
+    menu(task_list)
 
 
 __main__()
