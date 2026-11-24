@@ -1,6 +1,14 @@
 from pathlib import Path
 import os
+import tempfile
 
-json_path = Path(__file__).resolve().parent / "task_list.json"
-print(json_path)
-print(os.path.isfile(json_path))
+
+CURRENT_DIR = Path(__file__).resolve().parent
+JSON_PATH = CURRENT_DIR / "task_list.json"
+print(JSON_PATH)
+print(os.path.isfile(JSON_PATH))
+
+
+fd, tmp_path = tempfile.mkstemp(dir=CURRENT_DIR, suffix='.json.tmp')
+with os.fdopen(fd, 'w', encoding='utf-8') as f:
+    print('success')

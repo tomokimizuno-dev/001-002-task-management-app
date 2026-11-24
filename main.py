@@ -32,7 +32,7 @@ def reg_new_task(task_list):
     while True:
         deadline = input('input deadline (yyyy-mm-dd): ')
         try:
-            dt_deadline = datetime.strptime(deadline, '%Y-%m-%d')
+            dt_deadline = date.strptime(deadline, '%Y-%m-%d')
             break
         except ValueError:
             print("invalid input. Please enter datetime in the correct format.")
@@ -109,12 +109,17 @@ def read_file():
 
 
 def save_file(task_list):
+    print('copying the task list...')
     task_list_for_save = copy.deepcopy(task_list)
+    print('successed copying the task list')
+    print('converting datetime for JSON...')
     task_list_for_JSON = datetime_to_str(task_list_for_save)
+    print('successed converting datetime for JSON')
+    print('making a temp file')
     fd, tmp_path = tempfile.mkstemp(dir=CURRENT_DIR, suffix='.json.tmp')
     try:
         with os.fdopen(fd, 'w', encoding='utf-8') as f:
-            json.dump(task_list_for_JSON, task_list)
+            json.dump(task_list_for_JSON, f)
         os.replace(tmp_path, JSON_PATH)
         print('successed saving the file')
     except Exception:
@@ -133,7 +138,7 @@ def str_to_datetime(task_list):
         deadline = str(task['deadline'])
         deadline = datetime.fromisoformat(deadline)
         task['deadline'] = deadline.date()
-        return task_list
+    return task_list
 
 
 def menu(task_list):
@@ -142,7 +147,7 @@ def menu(task_list):
             "Please select an action. 1: Add a new task. 2: View a task list. 3: Update status. 4: Delete task. 5: Save to JSON. 9: exit  ")
         try:
             converted_answer = int(input_menu_ansewer)
-            match input_menu_ansewer:
+            match converted_answer:
                 case 1:
                     new_task = reg_new_task(task_list)
                     task_list.append(new_task)
@@ -157,7 +162,6 @@ def menu(task_list):
                     delete_task(deleted_task)
                 case 5:
                     save_file(task_list)
-                    print('saved.')
                 case 9:
                     break
                 case _:
