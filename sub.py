@@ -72,3 +72,7 @@ today = datetime.fromisoformat(today)
 
 print(today)
 print(type(today))
+
+
+test = []
+print(bool(test))

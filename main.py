@@ -3,6 +3,13 @@ import numpy as np
 import pandas as pd
 import json
 import copy
+from pathlib import Path
+import os
+import tempfile
+
+
+CURRENT_DIR = Path(__file__).resolve().parent
+JSON_PATH = CURRENT_DIR / "task_list.json"
 
 
 def latest_ID(list):
@@ -66,7 +73,7 @@ def update_status(updated_task):
             print("invalid input. Please correct number.")
 
 
-def delete_task(deleted_task):
+def delete_task(task_list, deleted_task):
     while True:
         is_conf = int(input('Delete this task? 1: Yes 2: No '))
         match is_conf:
@@ -82,31 +89,43 @@ def delete_task(deleted_task):
 
 def read_file():
     print('Checking the relevant file...')
-    try:
-        with open('task_list.json', 'xt', encoding='utf-8') as file:
-            task_list = []
-            return task_list
-            print('No relevant file. Created a new file.')
-    except FileExistsError:
+    if os.path.isfile(JSON_PATH):
+        print('file is found. reading the file...')
         with open('task_list.json', 'r', encoding='utf-8') as file:
-            task_list = json.load(file)
-            print('Loading the relevant file...')
-            task_list = str_to_datetime(task_list)
-            print('Converting data type...')
-            return task_list
+            try:
+                task_list = json.load(file)
+                print('Loading the relevant file...')
+                task_list = str_to_datetime(task_list)
+                print('Converting data type...')
+                return task_list
+            except json.JSONDecodeError:
+                print('cannot read a file.')
+                is_break = True
+                return is_break
+    else:
+        task_list = []
+        print('No relevant file. Created a new file.')
+        return task_list
 
 
 def save_file(task_list):
     task_list_for_save = copy.deepcopy(task_list)
     task_list_for_JSON = datetime_to_str(task_list_for_save)
-    with open('task_list.json', 'wt', encoding='utf-8') as file:
-        json.dump(task_list_for_JSON, file)
+    fd, tmp_path = tempfile.mkstemp(dir=CURRENT_DIR, suffix='.json.tmp')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            json.dump(task_list_for_JSON, task_list)
+        os.replace(tmp_path, JSON_PATH)
+        print('successed saving the file')
+    except Exception:
+        os.unlink(tmp_path)
+        print('failed saving the file')
 
 
 def datetime_to_str(task_list):
     for task in task_list:
         task['deadline'] = task['deadline'].isoformat()
-        return task_list
+    return task_list
 
 
 def str_to_datetime(task_list):
@@ -119,33 +138,41 @@ def str_to_datetime(task_list):
 
 def menu(task_list):
     while True:
-        select = int(input(
-            "Please select an action. 1: Add a new task. 2: View a task list. 3: Update status. 4: Delete task. 5: Save to JSON. 9: exit  "))
-        match select:
-            case 1:
-                new_task = reg_new_task(task_list)
-                task_list.append(new_task)
-                print("Task added.")
-            case 2:
-                print(view_table(task_list))
-            case 3:
-                updated_task = search_ID(task_list)
-                update_status(updated_task)
-            case 4:
-                deleted_task = search_ID(task_list)
-                delete_task(deleted_task)
-            case 5:
-                save_file(task_list)
-                print('saved.')
-            case 9:
-                break
-            case _:
-                print("invalid input. Please correct number.")
+        input_menu_ansewer = input(
+            "Please select an action. 1: Add a new task. 2: View a task list. 3: Update status. 4: Delete task. 5: Save to JSON. 9: exit  ")
+        try:
+            converted_answer = int(input_menu_ansewer)
+            match input_menu_ansewer:
+                case 1:
+                    new_task = reg_new_task(task_list)
+                    task_list.append(new_task)
+                    print("Task added.")
+                case 2:
+                    print(view_table(task_list))
+                case 3:
+                    updated_task = search_ID(task_list)
+                    update_status(updated_task)
+                case 4:
+                    deleted_task = search_ID(task_list)
+                    delete_task(deleted_task)
+                case 5:
+                    save_file(task_list)
+                    print('saved.')
+                case 9:
+                    break
+                case _:
+                    print("invalid input. Please correct number.")
+        except ValueError:
+            print("invalid input. Please correct number.")
 
 
 def __main__():
+    is_break = False
     task_list = read_file()
-    menu(task_list)
+    if is_break:
+        print('check the file. finishing application...')
+    else:
+        menu(task_list)
 
 
 __main__()
